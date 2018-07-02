@@ -1,21 +1,22 @@
- /*                                                                      
- Copyright 2017 Silicon Integrated Microelectronics, Inc.                
-                                                                         
- Licensed under the Apache License, Version 2.0 (the "License");         
- you may not use this file except in compliance with the License.        
- You may obtain a copy of the License at                                 
-                                                                         
-     http://www.apache.org/licenses/LICENSE-2.0                          
-                                                                         
-  Unless required by applicable law or agreed to in writing, software    
- distributed under the License is distributed on an "AS IS" BASIS,       
+ /*
+ Copyright 2017 Silicon Integrated Microelectronics, Inc.
+ Copyright 2018 Loongson Technology.
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and     
- limitations under the License.                                          
- */                                                                      
-                                                                         
-                                                                         
-                                                                         
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ */
+
+
+
 //=====================================================================
 //--        _______   ___
 //--       (   ____/ /__/
@@ -26,36 +27,39 @@
 //=====================================================================
 //
 // Designer   : Bob Hu
+// Loonger    : Leslie Zhai <lesliezhai@llvm.org.cn>
 //
 // Description:
 //  The Core module to implement the core portion of the cpu
 //
 // ====================================================================
 
-`include "e203_defines.v"
+include "e203_defines.loong"
 
-module e203_core(
-  output[`E203_PC_SIZE-1:0] inspect_pc,
+hmodule e203_core {
+public:
+  e203_core(
+  output[E203_PC_SIZE-1:0] inspect_pc,
 
-  `ifdef E203_HAS_CSR_EAI//{
+  ifdef E203_HAS_CSR_EAI//{
   output         eai_csr_valid,
   input          eai_csr_ready,
   output  [31:0] eai_csr_addr,
   output         eai_csr_wr,
   output  [31:0] eai_csr_wdata,
   input   [31:0] eai_csr_rdata,
-  `endif//}
+  endif//}
   output core_wfi,
   output tm_stop,
   output core_cgstop,
   output tcm_cgstop,
 
-  input  [`E203_PC_SIZE-1:0] pc_rtvec,
+  input  [E203_PC_SIZE-1:0] pc_rtvec,
 
-  input  [`E203_HART_ID_W-1:0] core_mhartid,
+  input  [E203_HART_ID_W-1:0] core_mhartid,
   input  dbg_irq_r,
-  input  [`E203_LIRQ_NUM-1:0] lcl_irq_r,
-  input  [`E203_EVT_NUM-1:0] evt_r,
+  input  [E203_LIRQ_NUM-1:0] lcl_irq_r,
+  input  [E203_EVT_NUM-1:0] evt_r,
   input  ext_irq_r,
   input  sft_irq_r,
   input  tmr_irq_r,
@@ -71,10 +75,10 @@ module e203_core(
   output  [32-1:0] wr_csr_nxt    ,
 
   input  [32-1:0] dcsr_r    ,
-  input  [`E203_PC_SIZE-1:0] dpc_r     ,
+  input  [E203_PC_SIZE-1:0] dpc_r     ,
   input  [32-1:0] dscratch_r,
 
-  output  [`E203_PC_SIZE-1:0] cmt_dpc,
+  output  [E203_PC_SIZE-1:0] cmt_dpc,
   output  cmt_dpc_ena,
   output  [3-1:0] cmt_dcause,
   output  cmt_dcause_ena,
@@ -85,9 +89,9 @@ module e203_core(
   input  dbg_ebreakm_r,
   input  dbg_stopcycle,
 
-  `ifdef E203_HAS_ITCM //{
+  ifdef E203_HAS_ITCM //{
   // The ITCM address region indication signal
-  input [`E203_ADDR_SIZE-1:0] itcm_region_indic,
+  input [E203_ADDR_SIZE-1:0] itcm_region_indic,
   input  ifu2itcm_holdup,
   //input  ifu2itcm_replay,
 
@@ -99,30 +103,30 @@ module e203_core(
   input  ifu2itcm_icb_cmd_ready, // Handshake ready
             // Note: The data on rdata or wdata channel must be naturally
             //       aligned, this is in line with the AXI definition
-  output [`E203_ITCM_ADDR_WIDTH-1:0]   ifu2itcm_icb_cmd_addr, // Bus transaction start addr 
+  output [E203_ITCM_ADDR_WIDTH-1:0]   ifu2itcm_icb_cmd_addr, // Bus transaction start addr 
 
   //    * Bus RSP channel
   input  ifu2itcm_icb_rsp_valid, // Response valid 
   output ifu2itcm_icb_rsp_ready, // Response ready
   input  ifu2itcm_icb_rsp_err,   // Response error
             // Note: the RSP rdata is inline with AXI definition
-  input  [`E203_ITCM_DATA_WIDTH-1:0] ifu2itcm_icb_rsp_rdata, 
-  `endif//}
+  input  [E203_ITCM_DATA_WIDTH-1:0] ifu2itcm_icb_rsp_rdata, 
+  endif//}
 
 
   //////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////
   // The ICB Interface to Private Peripheral Interface
-  input [`E203_ADDR_SIZE-1:0]    ppi_region_indic,
+  input [E203_ADDR_SIZE-1:0]    ppi_region_indic,
   //
   input                          ppi_icb_enable,
   //    * Bus cmd channel
   output                         ppi_icb_cmd_valid,
   input                          ppi_icb_cmd_ready,
-  output [`E203_ADDR_SIZE-1:0]   ppi_icb_cmd_addr, 
+  output [E203_ADDR_SIZE-1:0]   ppi_icb_cmd_addr, 
   output                         ppi_icb_cmd_read, 
-  output [`E203_XLEN-1:0]        ppi_icb_cmd_wdata,
-  output [`E203_XLEN/8-1:0]      ppi_icb_cmd_wmask,
+  output [E203_XLEN-1:0]        ppi_icb_cmd_wdata,
+  output [E203_XLEN/8-1:0]      ppi_icb_cmd_wmask,
   output                         ppi_icb_cmd_lock,
   output                         ppi_icb_cmd_excl,
   output [1:0]                   ppi_icb_cmd_size,
@@ -132,18 +136,18 @@ module e203_core(
   output                         ppi_icb_rsp_ready,
   input                          ppi_icb_rsp_err  ,
   input                          ppi_icb_rsp_excl_ok  ,
-  input  [`E203_XLEN-1:0]        ppi_icb_rsp_rdata,
+  input  [E203_XLEN-1:0]        ppi_icb_rsp_rdata,
 
   
-  input [`E203_ADDR_SIZE-1:0]    clint_region_indic,
+  input [E203_ADDR_SIZE-1:0]    clint_region_indic,
   input                          clint_icb_enable,
 
   output                         clint_icb_cmd_valid,
   input                          clint_icb_cmd_ready,
-  output [`E203_ADDR_SIZE-1:0]   clint_icb_cmd_addr, 
+  output [E203_ADDR_SIZE-1:0]   clint_icb_cmd_addr, 
   output                         clint_icb_cmd_read, 
-  output [`E203_XLEN-1:0]        clint_icb_cmd_wdata,
-  output [`E203_XLEN/8-1:0]      clint_icb_cmd_wmask,
+  output [E203_XLEN-1:0]        clint_icb_cmd_wdata,
+  output [E203_XLEN/8-1:0]      clint_icb_cmd_wmask,
   output                         clint_icb_cmd_lock,
   output                         clint_icb_cmd_excl,
   output [1:0]                   clint_icb_cmd_size,
@@ -153,17 +157,17 @@ module e203_core(
   output                         clint_icb_rsp_ready,
   input                          clint_icb_rsp_err  ,
   input                          clint_icb_rsp_excl_ok  ,
-  input  [`E203_XLEN-1:0]        clint_icb_rsp_rdata,
+  input  [E203_XLEN-1:0]        clint_icb_rsp_rdata,
 
-  input [`E203_ADDR_SIZE-1:0]    plic_region_indic,
+  input [E203_ADDR_SIZE-1:0]    plic_region_indic,
   input                          plic_icb_enable,
 
   output                         plic_icb_cmd_valid,
   input                          plic_icb_cmd_ready,
-  output [`E203_ADDR_SIZE-1:0]   plic_icb_cmd_addr, 
+  output [E203_ADDR_SIZE-1:0]   plic_icb_cmd_addr, 
   output                         plic_icb_cmd_read, 
-  output [`E203_XLEN-1:0]        plic_icb_cmd_wdata,
-  output [`E203_XLEN/8-1:0]      plic_icb_cmd_wmask,
+  output [E203_XLEN-1:0]        plic_icb_cmd_wdata,
+  output [E203_XLEN/8-1:0]      plic_icb_cmd_wmask,
   output                         plic_icb_cmd_lock,
   output                         plic_icb_cmd_excl,
   output [1:0]                   plic_icb_cmd_size,
@@ -173,23 +177,23 @@ module e203_core(
   output                         plic_icb_rsp_ready,
   input                          plic_icb_rsp_err  ,
   input                          plic_icb_rsp_excl_ok  ,
-  input  [`E203_XLEN-1:0]        plic_icb_rsp_rdata,
+  input  [E203_XLEN-1:0]        plic_icb_rsp_rdata,
 
 
-  `ifdef E203_HAS_FIO //{
+  ifdef E203_HAS_FIO //{
   //////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////
   // The ICB Interface to Fast I/O
-  input [`E203_ADDR_SIZE-1:0]    fio_region_indic,
+  input [E203_ADDR_SIZE-1:0]    fio_region_indic,
   //
   input                          fio_icb_enable,
   //    * Bus cmd channel
   output                         fio_icb_cmd_valid,
   input                          fio_icb_cmd_ready,
-  output [`E203_ADDR_SIZE-1:0]   fio_icb_cmd_addr, 
+  output [E203_ADDR_SIZE-1:0]   fio_icb_cmd_addr, 
   output                         fio_icb_cmd_read, 
-  output [`E203_XLEN-1:0]        fio_icb_cmd_wdata,
-  output [`E203_XLEN/8-1:0]      fio_icb_cmd_wmask,
+  output [E203_XLEN-1:0]        fio_icb_cmd_wdata,
+  output [E203_XLEN/8-1:0]      fio_icb_cmd_wmask,
   output                         fio_icb_cmd_lock,
   output                         fio_icb_cmd_excl,
   output [1:0]                   fio_icb_cmd_size,
@@ -199,10 +203,10 @@ module e203_core(
   output                         fio_icb_rsp_ready,
   input                          fio_icb_rsp_err  ,
   input                          fio_icb_rsp_excl_ok  ,
-  input  [`E203_XLEN-1:0]        fio_icb_rsp_rdata,
-  `endif//}
+  input  [E203_XLEN-1:0]        fio_icb_rsp_rdata,
+  endif//}
 
-  `ifdef E203_HAS_MEM_ITF //{
+  ifdef E203_HAS_MEM_ITF //{
   //////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////
   // The ICB Interface from Ifetch 
@@ -211,10 +215,10 @@ module e203_core(
   //    * Bus cmd channel
   output                         mem_icb_cmd_valid,
   input                          mem_icb_cmd_ready,
-  output [`E203_ADDR_SIZE-1:0]   mem_icb_cmd_addr, 
+  output [E203_ADDR_SIZE-1:0]   mem_icb_cmd_addr, 
   output                         mem_icb_cmd_read, 
-  output [`E203_XLEN-1:0]        mem_icb_cmd_wdata,
-  output [`E203_XLEN/8-1:0]      mem_icb_cmd_wmask,
+  output [E203_XLEN-1:0]        mem_icb_cmd_wdata,
+  output [E203_XLEN/8-1:0]      mem_icb_cmd_wmask,
   output                         mem_icb_cmd_lock,
   output                         mem_icb_cmd_excl,
   output [1:0]                   mem_icb_cmd_size,
@@ -226,10 +230,10 @@ module e203_core(
   output                         mem_icb_rsp_ready,
   input                          mem_icb_rsp_err  ,
   input                          mem_icb_rsp_excl_ok  ,
-  input  [`E203_XLEN-1:0]        mem_icb_rsp_rdata,
-  `endif//}
+  input  [E203_XLEN-1:0]        mem_icb_rsp_rdata,
+  endif//}
 
-  `ifdef E203_HAS_ITCM //{
+  ifdef E203_HAS_ITCM //{
   //////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////
   // The ICB Interface to ITCM
@@ -237,10 +241,10 @@ module e203_core(
   //    * Bus cmd channel
   output                         lsu2itcm_icb_cmd_valid,
   input                          lsu2itcm_icb_cmd_ready,
-  output [`E203_ITCM_ADDR_WIDTH-1:0]   lsu2itcm_icb_cmd_addr, 
+  output [E203_ITCM_ADDR_WIDTH-1:0]   lsu2itcm_icb_cmd_addr, 
   output                         lsu2itcm_icb_cmd_read, 
-  output [`E203_XLEN-1:0]        lsu2itcm_icb_cmd_wdata,
-  output [`E203_XLEN/8-1:0]      lsu2itcm_icb_cmd_wmask,
+  output [E203_XLEN-1:0]        lsu2itcm_icb_cmd_wdata,
+  output [E203_XLEN/8-1:0]      lsu2itcm_icb_cmd_wmask,
   output                         lsu2itcm_icb_cmd_lock,
   output                         lsu2itcm_icb_cmd_excl,
   output [1:0]                   lsu2itcm_icb_cmd_size,
@@ -250,11 +254,11 @@ module e203_core(
   output                         lsu2itcm_icb_rsp_ready,
   input                          lsu2itcm_icb_rsp_err  ,
   input                          lsu2itcm_icb_rsp_excl_ok  ,
-  input  [`E203_XLEN-1:0]        lsu2itcm_icb_rsp_rdata,
-  `endif//}
+  input  [E203_XLEN-1:0]        lsu2itcm_icb_rsp_rdata,
+  endif//}
 
-    `ifdef E203_HAS_DTCM //{
-  input [`E203_ADDR_SIZE-1:0] dtcm_region_indic,
+    ifdef E203_HAS_DTCM //{
+  input [E203_ADDR_SIZE-1:0] dtcm_region_indic,
   //////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////
   // The ICB Interface to DTCM
@@ -262,10 +266,10 @@ module e203_core(
   //    * Bus cmd channel
   output                         lsu2dtcm_icb_cmd_valid,
   input                          lsu2dtcm_icb_cmd_ready,
-  output [`E203_DTCM_ADDR_WIDTH-1:0]   lsu2dtcm_icb_cmd_addr, 
+  output [E203_DTCM_ADDR_WIDTH-1:0]   lsu2dtcm_icb_cmd_addr, 
   output                         lsu2dtcm_icb_cmd_read, 
-  output [`E203_XLEN-1:0]        lsu2dtcm_icb_cmd_wdata,
-  output [`E203_XLEN/8-1:0]      lsu2dtcm_icb_cmd_wmask,
+  output [E203_XLEN-1:0]        lsu2dtcm_icb_cmd_wdata,
+  output [E203_XLEN/8-1:0]      lsu2dtcm_icb_cmd_wmask,
   output                         lsu2dtcm_icb_cmd_lock,
   output                         lsu2dtcm_icb_cmd_excl,
   output [1:0]                   lsu2dtcm_icb_cmd_size,
@@ -275,8 +279,8 @@ module e203_core(
   output                         lsu2dtcm_icb_rsp_ready,
   input                          lsu2dtcm_icb_rsp_err  ,
   input                          lsu2dtcm_icb_rsp_excl_ok,
-  input  [`E203_XLEN-1:0]        lsu2dtcm_icb_rsp_rdata,
-  `endif//}
+  input  [E203_XLEN-1:0]        lsu2dtcm_icb_rsp_rdata,
+  endif//}
 
   output exu_active,
   output ifu_active,
@@ -293,30 +297,30 @@ module e203_core(
   input  rst_n
   );
 
-    `ifdef E203_HAS_MEM_ITF //{
+    ifdef E203_HAS_MEM_ITF //{
   wire                         ifu2biu_icb_cmd_valid;
   wire                         ifu2biu_icb_cmd_ready;
-  wire [`E203_ADDR_SIZE-1:0]   ifu2biu_icb_cmd_addr; 
+  wire [E203_ADDR_SIZE-1:0]   ifu2biu_icb_cmd_addr; 
   wire                         ifu2biu_icb_rsp_valid;
   wire                         ifu2biu_icb_rsp_ready;
   wire                         ifu2biu_icb_rsp_err  ;
   wire                         ifu2biu_icb_rsp_excl_ok;
-  wire [`E203_XLEN-1:0]        ifu2biu_icb_rsp_rdata;
+  wire [E203_XLEN-1:0]        ifu2biu_icb_rsp_rdata;
    
-  `endif//}
+  endif//}
 
 
 
 
   wire ifu_o_valid;
   wire ifu_o_ready;
-  wire [`E203_INSTR_SIZE-1:0] ifu_o_ir;
-  wire [`E203_PC_SIZE-1:0] ifu_o_pc;
+  wire [E203_INSTR_SIZE-1:0] ifu_o_ir;
+  wire [E203_PC_SIZE-1:0] ifu_o_pc;
   wire ifu_o_pc_vld; 
   wire ifu_o_misalgn; 
   wire ifu_o_buserr; 
-  wire [`E203_RFIDX_WIDTH-1:0] ifu_o_rs1idx;
-  wire [`E203_RFIDX_WIDTH-1:0] ifu_o_rs2idx;
+  wire [E203_RFIDX_WIDTH-1:0] ifu_o_rs1idx;
+  wire [E203_RFIDX_WIDTH-1:0] ifu_o_rs2idx;
   wire ifu_o_prdt_taken;
   wire ifu_o_muldiv_b2b;
 
@@ -324,18 +328,18 @@ module e203_core(
   wire wfi_halt_ifu_ack;
   wire pipe_flush_ack;
   wire pipe_flush_req;
-  wire [`E203_PC_SIZE-1:0] pipe_flush_add_op1;  
-  wire [`E203_PC_SIZE-1:0] pipe_flush_add_op2;  
-  `ifdef E203_TIMING_BOOST//}
-  wire [`E203_PC_SIZE-1:0] pipe_flush_pc;  
-  `endif//}
+  wire [E203_PC_SIZE-1:0] pipe_flush_add_op1;  
+  wire [E203_PC_SIZE-1:0] pipe_flush_add_op2;  
+  ifdef E203_TIMING_BOOST//}
+  wire [E203_PC_SIZE-1:0] pipe_flush_pc;  
+  endif//}
 
   wire oitf_empty;
-  wire [`E203_XLEN-1:0] rf2ifu_x1;
-  wire [`E203_XLEN-1:0] rf2ifu_rs1;
+  wire [E203_XLEN-1:0] rf2ifu_x1;
+  wire [E203_XLEN-1:0] rf2ifu_rs1;
   wire dec2ifu_rden;
   wire dec2ifu_rs1en;
-  wire [`E203_RFIDX_WIDTH-1:0] dec2ifu_rdidx;
+  wire [E203_RFIDX_WIDTH-1:0] dec2ifu_rdidx;
   wire dec2ifu_mulhsu;
   wire dec2ifu_div   ;
   wire dec2ifu_rem   ;
@@ -353,7 +357,7 @@ module e203_core(
 
     .itcm_nohold     (itcm_nohold),
 
-  `ifdef E203_HAS_ITCM //{
+  ifdef E203_HAS_ITCM //{
     .ifu2itcm_holdup (ifu2itcm_holdup),
     //.ifu2itcm_replay (ifu2itcm_replay),
 
@@ -367,9 +371,9 @@ module e203_core(
     .ifu2itcm_icb_rsp_ready(ifu2itcm_icb_rsp_ready),
     .ifu2itcm_icb_rsp_err  (ifu2itcm_icb_rsp_err  ),
     .ifu2itcm_icb_rsp_rdata(ifu2itcm_icb_rsp_rdata),
-  `endif//}
+  endif//}
 
-  `ifdef E203_HAS_MEM_ITF //{
+  ifdef E203_HAS_MEM_ITF //{
     .ifu2biu_icb_cmd_valid  (ifu2biu_icb_cmd_valid),
     .ifu2biu_icb_cmd_ready  (ifu2biu_icb_cmd_ready),
     .ifu2biu_icb_cmd_addr   (ifu2biu_icb_cmd_addr ),
@@ -379,7 +383,7 @@ module e203_core(
     .ifu2biu_icb_rsp_err    (ifu2biu_icb_rsp_err  ),
     .ifu2biu_icb_rsp_rdata  (ifu2biu_icb_rsp_rdata),
 
-  `endif//}
+  endif//}
 
 
     .ifu_o_valid            (ifu_o_valid         ),
@@ -400,9 +404,9 @@ module e203_core(
     .pipe_flush_req         (pipe_flush_req      ),
     .pipe_flush_add_op1     (pipe_flush_add_op1  ),  
     .pipe_flush_add_op2     (pipe_flush_add_op2  ),  
-  `ifdef E203_TIMING_BOOST//}
+  ifdef E203_TIMING_BOOST//}
     .pipe_flush_pc          (pipe_flush_pc),  
-  `endif//}
+  endif//}
 
                                  
     .oitf_empty             (oitf_empty   ),
@@ -425,31 +429,31 @@ module e203_core(
 
   wire                         lsu_o_valid; 
   wire                         lsu_o_ready; 
-  wire [`E203_XLEN-1:0]        lsu_o_wbck_wdat;
-  wire [`E203_ITAG_WIDTH -1:0] lsu_o_wbck_itag;
+  wire [E203_XLEN-1:0]        lsu_o_wbck_wdat;
+  wire [E203_ITAG_WIDTH -1:0] lsu_o_wbck_itag;
   wire                         lsu_o_wbck_err ; 
   wire                         lsu_o_cmt_buserr ; 
   wire                         lsu_o_cmt_ld;
   wire                         lsu_o_cmt_st;
-  wire [`E203_ADDR_SIZE -1:0]  lsu_o_cmt_badaddr;
+  wire [E203_ADDR_SIZE -1:0]  lsu_o_cmt_badaddr;
 
   wire                         agu_icb_cmd_valid; 
   wire                         agu_icb_cmd_ready; 
-  wire [`E203_ADDR_SIZE-1:0]   agu_icb_cmd_addr; 
+  wire [E203_ADDR_SIZE-1:0]   agu_icb_cmd_addr; 
   wire                         agu_icb_cmd_read;   
-  wire [`E203_XLEN-1:0]        agu_icb_cmd_wdata; 
-  wire [`E203_XLEN/8-1:0]      agu_icb_cmd_wmask; 
+  wire [E203_XLEN-1:0]        agu_icb_cmd_wdata; 
+  wire [E203_XLEN/8-1:0]      agu_icb_cmd_wmask; 
   wire                         agu_icb_cmd_lock;
   wire                         agu_icb_cmd_excl;
   wire [1:0]                   agu_icb_cmd_size;
   wire                         agu_icb_cmd_back2agu; 
   wire                         agu_icb_cmd_usign;
-  wire [`E203_ITAG_WIDTH -1:0] agu_icb_cmd_itag;
+  wire [E203_ITAG_WIDTH -1:0] agu_icb_cmd_itag;
   wire                         agu_icb_rsp_valid; 
   wire                         agu_icb_rsp_ready; 
   wire                         agu_icb_rsp_err  ; 
   wire                         agu_icb_rsp_excl_ok  ; 
-  wire [`E203_XLEN-1:0]        agu_icb_rsp_rdata;
+  wire [E203_XLEN-1:0]        agu_icb_rsp_rdata;
 
   wire commit_mret;
   wire commit_trap;
@@ -457,14 +461,14 @@ module e203_core(
 
   e203_exu u_e203_exu(
 
-  `ifdef E203_HAS_CSR_EAI//{
+  ifdef E203_HAS_CSR_EAI//{
     .eai_csr_valid (eai_csr_valid),
     .eai_csr_ready (eai_csr_ready),
     .eai_csr_addr  (eai_csr_addr ),
     .eai_csr_wr    (eai_csr_wr   ),
     .eai_csr_wdata (eai_csr_wdata),
     .eai_csr_rdata (eai_csr_rdata),
-  `endif//}
+  endif//}
 
 
     .excp_active            (excp_active),
@@ -528,9 +532,9 @@ module e203_core(
     .pipe_flush_req         (pipe_flush_req      ),
     .pipe_flush_add_op1     (pipe_flush_add_op1  ),  
     .pipe_flush_add_op2     (pipe_flush_add_op2  ),  
-  `ifdef E203_TIMING_BOOST//}
+  ifdef E203_TIMING_BOOST//}
     .pipe_flush_pc          (pipe_flush_pc),  
-  `endif//}
+  endif//}
 
     .lsu_o_valid            (lsu_o_valid   ),
     .lsu_o_ready            (lsu_o_ready   ),
@@ -580,10 +584,10 @@ module e203_core(
 
   wire                         lsu2biu_icb_cmd_valid;
   wire                         lsu2biu_icb_cmd_ready;
-  wire [`E203_ADDR_SIZE-1:0]   lsu2biu_icb_cmd_addr; 
+  wire [E203_ADDR_SIZE-1:0]   lsu2biu_icb_cmd_addr; 
   wire                         lsu2biu_icb_cmd_read; 
-  wire [`E203_XLEN-1:0]        lsu2biu_icb_cmd_wdata;
-  wire [`E203_XLEN/8-1:0]      lsu2biu_icb_cmd_wmask;
+  wire [E203_XLEN-1:0]        lsu2biu_icb_cmd_wdata;
+  wire [E203_XLEN/8-1:0]      lsu2biu_icb_cmd_wmask;
   wire                         lsu2biu_icb_cmd_lock;
   wire                         lsu2biu_icb_cmd_excl;
   wire [1:0]                   lsu2biu_icb_cmd_size;
@@ -592,7 +596,7 @@ module e203_core(
   wire                         lsu2biu_icb_rsp_ready;
   wire                         lsu2biu_icb_rsp_err  ;
   wire                         lsu2biu_icb_rsp_excl_ok;
-  wire [`E203_XLEN-1:0]        lsu2biu_icb_rsp_rdata;
+  wire [E203_XLEN-1:0]        lsu2biu_icb_rsp_rdata;
 
   e203_lsu u_e203_lsu(
     .excp_active         (excp_active),
@@ -631,7 +635,7 @@ module e203_core(
 
 
 
-  `ifdef E203_HAS_ITCM //{
+  ifdef E203_HAS_ITCM //{
     .itcm_region_indic   (itcm_region_indic),
     .itcm_icb_cmd_valid  (lsu2itcm_icb_cmd_valid),
     .itcm_icb_cmd_ready  (lsu2itcm_icb_cmd_ready),
@@ -649,9 +653,9 @@ module e203_core(
     .itcm_icb_rsp_excl_ok(lsu2itcm_icb_rsp_excl_ok  ),
     .itcm_icb_rsp_rdata  (lsu2itcm_icb_rsp_rdata),
 
-  `endif//}
+  endif//}
 
-  `ifdef E203_HAS_DTCM //{
+  ifdef E203_HAS_DTCM //{
     .dtcm_region_indic   (dtcm_region_indic),
 
     .dtcm_icb_cmd_valid  (lsu2dtcm_icb_cmd_valid),
@@ -670,7 +674,7 @@ module e203_core(
     .dtcm_icb_rsp_excl_ok(lsu2dtcm_icb_rsp_excl_ok  ),
     .dtcm_icb_rsp_rdata  (lsu2dtcm_icb_rsp_rdata),
 
-  `endif//}
+  endif//}
 
     .biu_icb_cmd_valid  (lsu2biu_icb_cmd_valid),
     .biu_icb_cmd_ready  (lsu2biu_icb_cmd_ready),
@@ -716,13 +720,13 @@ module e203_core(
     .lsu2biu_icb_rsp_excl_ok(lsu2biu_icb_rsp_excl_ok),
     .lsu2biu_icb_rsp_rdata  (lsu2biu_icb_rsp_rdata),
 
-  `ifdef E203_HAS_MEM_ITF //{
+  ifdef E203_HAS_MEM_ITF //{
     .ifu2biu_icb_cmd_valid  (ifu2biu_icb_cmd_valid),
     .ifu2biu_icb_cmd_ready  (ifu2biu_icb_cmd_ready),
     .ifu2biu_icb_cmd_addr   (ifu2biu_icb_cmd_addr ),
     .ifu2biu_icb_cmd_read   (1'b1 ),
-    .ifu2biu_icb_cmd_wdata  (`E203_XLEN'b0),
-    .ifu2biu_icb_cmd_wmask  ({`E203_XLEN/8{1'b0}}),
+    .ifu2biu_icb_cmd_wdata  (E203_XLEN'b0),
+    .ifu2biu_icb_cmd_wmask  ({E203_XLEN/8{1'b0}}),
     .ifu2biu_icb_cmd_lock   (1'b0 ),
     .ifu2biu_icb_cmd_excl   (1'b0 ),
     .ifu2biu_icb_cmd_size   (2'b10),
@@ -735,7 +739,7 @@ module e203_core(
     .ifu2biu_icb_rsp_excl_ok(ifu2biu_icb_rsp_excl_ok),
     .ifu2biu_icb_rsp_rdata  (ifu2biu_icb_rsp_rdata),
 
-  `endif//}
+  endif//}
 
     .ppi_region_indic      (ppi_region_indic ),
     .ppi_icb_enable        (ppi_icb_enable),
@@ -799,7 +803,7 @@ module e203_core(
     .clint_icb_rsp_rdata     (clint_icb_rsp_rdata),
 
 
-  `ifdef E203_HAS_FIO //{
+  ifdef E203_HAS_FIO //{
     .fio_region_indic      (fio_region_indic ),
     .fio_icb_enable        (fio_icb_enable),
     .fio_icb_cmd_valid     (fio_icb_cmd_valid),
@@ -819,9 +823,9 @@ module e203_core(
     .fio_icb_rsp_err       (fio_icb_rsp_err  ),
     .fio_icb_rsp_excl_ok   (fio_icb_rsp_excl_ok  ),
     .fio_icb_rsp_rdata     (fio_icb_rsp_rdata),
-  `endif//}
+  endif//}
 
-  `ifdef E203_HAS_MEM_ITF //{
+  ifdef E203_HAS_MEM_ITF //{
     .mem_icb_enable        (mem_icb_enable),
     .mem_icb_cmd_valid     (mem_icb_cmd_valid),
     .mem_icb_cmd_ready     (mem_icb_cmd_ready),
@@ -840,15 +844,9 @@ module e203_core(
     .mem_icb_rsp_err       (mem_icb_rsp_err  ),
     .mem_icb_rsp_excl_ok   (mem_icb_rsp_excl_ok  ),
     .mem_icb_rsp_rdata     (mem_icb_rsp_rdata),
-  `endif//}
+  endif//}
 
     .clk                    (clk_core_biu ),
     .rst_n                  (rst_n        ) 
   );
-
-
-
-endmodule                                      
-                                               
-                                               
-                                               
+};
