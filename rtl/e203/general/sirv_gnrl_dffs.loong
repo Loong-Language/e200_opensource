@@ -1,21 +1,22 @@
- /*                                                                      
- Copyright 2017 Silicon Integrated Microelectronics, Inc.                
-                                                                         
- Licensed under the Apache License, Version 2.0 (the "License");         
- you may not use this file except in compliance with the License.        
- You may obtain a copy of the License at                                 
-                                                                         
-     http://www.apache.org/licenses/LICENSE-2.0                          
-                                                                         
-  Unless required by applicable law or agreed to in writing, software    
- distributed under the License is distributed on an "AS IS" BASIS,       
+ /*
+ Copyright 2017 Silicon Integrated Microelectronics, Inc.
+ Copyright 2018 Loongson Technology.
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and     
- limitations under the License.                                          
- */                                                                      
-                                                                         
-                                                                         
-                                                                         
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ */
+
+
+
 //=====================================================================
 //--        _______   ___
 //--       (   ____/ /__/
@@ -26,6 +27,7 @@
 //=====================================================================
 //
 // Designer   : Bob Hu
+// Loonger    : Leslie Zhai <lesliezhai@llvm.org.cn>
 //
 // Description:
 //  All of the general DFF and Latch modules
@@ -44,32 +46,29 @@
 //
 // ===========================================================================
 
-module sirv_gnrl_dfflrs # (
-  parameter DW = 32
-) (
-
+template<size_t DW = 32> hmodule sirv_gnrl_dfflrs {
+public:
+  sirv_gnrl_dfflrs(
   input               lden, 
-  input      [DW-1:0] dnxt,
-  output     [DW-1:0] qout,
+  input               dnxt[DW - 1],
+  output              qout[DW - 1],
 
   input               clk,
-  input               rst_n
-);
+  input               rst_n) {
 
-reg [DW-1:0] qout_r;
+reg qout_r[DW - 1];
 
-always @(posedge clk or negedge rst_n)
-begin : DFFLRS_PROC
+__always(posedge clk or negedge rst_n) {
   if (rst_n == 1'b0)
-    qout_r <= {DW{1'b1}};
+    __nonblock_assign(qout_r = {DW{1'b1}});
   else if (lden == 1'b1)
-    qout_r <= #1 dnxt;
-end
+    __nonblock_assign(qout_r = #1 dnxt);
+}
 
-assign qout = qout_r;
+__assign(qout = qout_r);
 
-`ifndef FPGA_SOURCE//{
-`ifndef DISABLE_SV_ASSERTION//{
+#ifndef FPGA_SOURCE//{
+#ifndef DISABLE_SV_ASSERTION//{
 //synopsys translate_off
 sirv_gnrl_xchecker # (
   .DW(1)
@@ -80,9 +79,9 @@ sirv_gnrl_xchecker # (
 //synopsys translate_on
 `endif//}
 `endif//}
-    
+}
+};
 
-endmodule
 // ===========================================================================
 //
 // Description:
@@ -115,8 +114,8 @@ end
 
 assign qout = qout_r;
 
-`ifndef FPGA_SOURCE//{
-`ifndef DISABLE_SV_ASSERTION//{
+#ifndef FPGA_SOURCE//{
+#ifndef DISABLE_SV_ASSERTION//{
 //synopsys translate_off
 sirv_gnrl_xchecker # (
   .DW(1)
@@ -158,8 +157,8 @@ end
 
 assign qout = qout_r;
 
-`ifndef FPGA_SOURCE//{
-`ifndef DISABLE_SV_ASSERTION//{
+#ifndef FPGA_SOURCE//{
+#ifndef DISABLE_SV_ASSERTION//{
 //synopsys translate_off
 sirv_gnrl_xchecker # (
   .DW(1)
@@ -265,8 +264,8 @@ end
 //assign qout = test_mode ? dnxt : qout_r;
 assign qout = qout_r;
 
-`ifndef FPGA_SOURCE//{
-`ifndef DISABLE_SV_ASSERTION//{
+#ifndef FPGA_SOURCE//{
+#ifndef DISABLE_SV_ASSERTION//{
 //synopsys translate_off
 always_comb
 begin
