@@ -34,7 +34,7 @@
 //
 // ====================================================================
 
-include "e203_defines.loong"
+#include "e203_defines.loong"
 
 hmodule e203_core {
 public:
