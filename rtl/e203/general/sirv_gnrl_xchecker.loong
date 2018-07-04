@@ -34,6 +34,7 @@
 //
 // ====================================================================
 
+#include "llvm/Support/ErrorHandling.h"
 
 #ifndef FPGA_SOURCE//{
 #ifndef DISABLE_SV_ASSERTION//{
@@ -44,12 +45,14 @@ public:
   input i_dat[DW - 1],
   input clk) {
 
-
+// FIXME: Unimplemented
+#if 0
 CHECK_THE_X_VALUE:
   assert property (@(posedge clk) 
                      ((^(i_dat)) !== 1'bx)
                   )
-  else $fatal ("\n Error: Oops, detected a X value!!! This should never happen. \n");
+#endif
+  #else llvm_unreachable("\n Error: Oops, detected a X value!!! This should never happen. \n");
 }
 };
 //synopsys translate_on
