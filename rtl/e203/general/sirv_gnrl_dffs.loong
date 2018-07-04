@@ -34,7 +34,7 @@
 //
 // ====================================================================
 
-//
+#include <cstddef>
 
 
 //
@@ -130,6 +130,7 @@ sirv_gnrl_xchecker # (
 //synopsys translate_on
 #endif//}
 #endif//}
+}
 }; 
 
 // ===========================================================================
@@ -146,7 +147,7 @@ public:
   input               dnxt[DW - 1],
   output              qout[DW - 1],
 
-  input               clk){
+  input               clk) {
 
 reg qout_r[DW - 1];
 
@@ -172,6 +173,7 @@ sirv_gnrl_xchecker # (
 //synopsys translate_on
 #endif//}
 #endif//}
+}
 }; 
 
 // ===========================================================================
