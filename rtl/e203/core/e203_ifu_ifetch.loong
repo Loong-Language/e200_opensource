@@ -39,10 +39,10 @@
 hmodule e203_ifu_ifetch {
 public:
   e203_ifu_ifetch(
-  output inspect_pc[E203_PC_SIZE - 1],
+  output inspect_pc[E203_PC_SIZE-1:0],
 
 
-  input  pc_rtvec[E203_PC_SIZE - 1],
+  input  pc_rtvec[E203_PC_SIZE-1:0],
   //////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////
   // Fetch Interface to memory system, internal protocol
@@ -53,10 +53,10 @@ public:
             //       by req_len signal.
             //       The targetd (ITCM, ICache or Sys-MEM) ctrl modules 
             //       will handle the unalign cases and split-and-merge works
-  output ifu_req_pc[E203_PC_SIZE - 1], // Fetch PC
+  output ifu_req_pc[E203_PC_SIZE-1:0], // Fetch PC
   output ifu_req_seq, // This request is a sequential instruction fetch
   output ifu_req_seq_rv32, // This request is incremented 32bits fetch
-  output ifu_req_last_pc[E203_PC_SIZE - 1], // The last accessed
+  output ifu_req_last_pc[E203_PC_SIZE-1:0], // The last accessed
                                            // PC address (i.e., pc_r)
   //    * IFetch RSP channel
   input  ifu_rsp_valid, // Response valid 
@@ -67,16 +67,16 @@ public:
             //   The targetd (ITCM, ICache or Sys-MEM) ctrl modules 
             //   will handle the unalign cases and split-and-merge works
   //input  ifu_rsp_replay,
-  input  ifu_rsp_instr[E203_INSTR_SIZE - 1], // Response instruction
+  input  ifu_rsp_instr[E203_INSTR_SIZE-1:0], // Response instruction
 
   //////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////
   // The IR stage to EXU interface
-  output ifu_o_ir[E203_INSTR_SIZE - 1],// The instruction register
-  output ifu_o_pc[E203_PC_SIZE - 1],   // The PC register along with
+  output ifu_o_ir[E203_INSTR_SIZE-1:0],// The instruction register
+  output ifu_o_pc[E203_PC_SIZE-1:0],   // The PC register along with
   output ifu_o_pc_vld,
-  output ifu_o_rs1idx[E203_RFIDX_WIDTH - 1],
-  output ifu_o_rs2idx[E203_RFIDX_WIDTH - 1],
+  output ifu_o_rs1idx[E203_RFIDX_WIDTH-1:0],
+  output ifu_o_rs2idx[E203_RFIDX_WIDTH-1:0],
   output ifu_o_prdt_taken,               // The Bxx is predicted as taken
   output ifu_o_misalgn,                  // The fetch misalign 
   output ifu_o_buserr,                   // The fetch bus error
@@ -86,10 +86,10 @@ public:
 
   output  pipe_flush_ack,
   input   pipe_flush_req,
-  input   pipe_flush_add_op1[E203_PC_SIZE - 1],
-  input   pipe_flush_add_op2[E203_PC_SIZE - 1],
+  input   pipe_flush_add_op1[E203_PC_SIZE-1:0],
+  input   pipe_flush_add_op2[E203_PC_SIZE-1:0],
   #ifdef E203_TIMING_BOOST//}
-  input   pipe_flush_pc[E203_PC_SIZE - 1],
+  input   pipe_flush_pc[E203_PC_SIZE-1:0],
   #endif//}
 
       
@@ -103,11 +103,11 @@ public:
 
 
   input  oitf_empty,
-  input  rf2ifu_x1[E203_XLEN - 1],
-  input  rf2ifu_rs1[E203_XLEN - 1],
+  input  rf2ifu_x1[E203_XLEN-1:0],
+  input  rf2ifu_rs1[E203_XLEN-1:0],
   input  dec2ifu_rs1en,
   input  dec2ifu_rden,
-  input  dec2ifu_rdidx[E203_RFIDX_WIDTH - 1],
+  input  dec2ifu_rdidx[E203_RFIDX_WIDTH-1:0],
   input  dec2ifu_mulhsu,
   input  dec2ifu_div   ,
   input  dec2ifu_rem   ,
@@ -251,7 +251,7 @@ public:
   sirv_gnrl_dfflr ir_pc_vld_dfflr(ir_pc_vld_ena, ir_pc_vld_nxt, ir_pc_vld_r, clk, rst_n);
 
      // IFU-IR loaded with the returned instruction from the IFetch RSP channel
-  wire ifu_ir_nxt[E203_INSTR_SIZE - 1] = ifu_rsp_instr;
+  wire ifu_ir_nxt[E203_INSTR_SIZE-1:0] = ifu_rsp_instr;
      // IFU-PC loaded with the current PC
   wire                     ifu_err_nxt = ifu_rsp_err;
 
@@ -265,44 +265,45 @@ public:
   wire ifu_muldiv_b2b_r;
   sirv_gnrl_dfflr ir_muldiv_b2b_dfflr(ir_valid_set, ifu_muldiv_b2b_nxt, ifu_muldiv_b2b_r, clk, rst_n);
      //To save power the H-16bits only loaded when it is 32bits length instru 
-  wire ifu_ir_r[E203_INSTR_SIZE - 1];// The instruction register
+  wire ifu_ir_r[E203_INSTR_SIZE-1:0];// The instruction register
   wire minidec_rv32;
   wire ir_hi_ena = ir_valid_set & minidec_rv32;
   wire ir_lo_ena = ir_valid_set;
-  sirv_gnrl_dfflr ifu_hi_ir_dfflr(ir_hi_ena, ifu_ir_nxt[31:16], ifu_ir_r[31:16], clk, rst_n);
-  sirv_gnrl_dfflr ifu_lo_ir_dfflr(ir_lo_ena, ifu_ir_nxt[15: 0], ifu_ir_r[15: 0], clk, rst_n);
+  // FIXME: Unimplemented
+  //sirv_gnrl_dfflr ifu_hi_ir_dfflr(ir_hi_ena, ifu_ir_nxt[31:16], ifu_ir_r[31:16], clk, rst_n);
+  //sirv_gnrl_dfflr ifu_lo_ir_dfflr(ir_lo_ena, ifu_ir_nxt[15: 0], ifu_ir_r[15: 0], clk, rst_n);
 
   wire minidec_rs1en;
   wire minidec_rs2en;
-  wire minidec_rs1idx[E203_RFIDX_WIDTH - 1];
-  wire minidec_rs2idx[E203_RFIDX_WIDTH - 1];
+  wire minidec_rs1idx[E203_RFIDX_WIDTH-1:0];
+  wire minidec_rs2idx[E203_RFIDX_WIDTH-1:0];
 
   #ifndef E203_HAS_FPU//}
-  wire minidec_fpu        = 1'b0;
-  wire minidec_fpu_rs1en  = 1'b0;
-  wire minidec_fpu_rs2en  = 1'b0;
-  wire minidec_fpu_rs3en  = 1'b0;
-  wire minidec_fpu_rs1fpu = 1'b0;
-  wire minidec_fpu_rs2fpu = 1'b0;
-  wire minidec_fpu_rs3fpu = 1'b0;
-  wire minidec_fpu_rs1idx[E203_RFIDX_WIDTH - 1] = 0;
-  wire minidec_fpu_rs2idx[E203_RFIDX_WIDTH - 1] = 0;
+  wire minidec_fpu        = 0;
+  wire minidec_fpu_rs1en  = 0;
+  wire minidec_fpu_rs2en  = 0;
+  wire minidec_fpu_rs3en  = 0;
+  wire minidec_fpu_rs1fpu = 0;
+  wire minidec_fpu_rs2fpu = 0;
+  wire minidec_fpu_rs3fpu = 0;
+  wire minidec_fpu_rs1idx[E203_RFIDX_WIDTH-1:0] = 0;
+  wire minidec_fpu_rs2idx[E203_RFIDX_WIDTH-1:0] = 0;
   #endif//}
 
-  wire ir_rs1idx_r[E203_RFIDX_WIDTH - 1];
-  wire ir_rs2idx_r[E203_RFIDX_WIDTH - 1];
+  wire ir_rs1idx_r[E203_RFIDX_WIDTH-1:0];
+  wire ir_rs2idx_r[E203_RFIDX_WIDTH-1:0];
   wire bpu2rf_rs1_ena;
   //FPU: if it is FPU instruction. we still need to put it into the IR register, but we need to mask off the non-integer regfile index to save power
   wire ir_rs1idx_ena = (minidec_fpu & ir_valid_set & minidec_fpu_rs1en & (~minidec_fpu_rs1fpu)) | ((~minidec_fpu) & ir_valid_set & minidec_rs1en) | bpu2rf_rs1_ena;
   wire ir_rs2idx_ena = (minidec_fpu & ir_valid_set & minidec_fpu_rs2en & (~minidec_fpu_rs2fpu)) | ((~minidec_fpu) & ir_valid_set & minidec_rs2en);
-  wire ir_rs1idx_nxt[E203_RFIDX_WIDTH - 1] = minidec_fpu ? minidec_fpu_rs1idx : minidec_rs1idx;
-  wire ir_rs2idx_nxt[E203_RFIDX_WIDTH - 1] = minidec_fpu ? minidec_fpu_rs2idx : minidec_rs2idx;
+  wire ir_rs1idx_nxt[E203_RFIDX_WIDTH-1:0] = minidec_fpu ? minidec_fpu_rs1idx : minidec_rs1idx;
+  wire ir_rs2idx_nxt[E203_RFIDX_WIDTH-1:0] = minidec_fpu ? minidec_fpu_rs2idx : minidec_rs2idx;
   sirv_gnrl_dfflr ir_rs1idx_dfflr(ir_rs1idx_ena, ir_rs1idx_nxt, ir_rs1idx_r, clk, rst_n);
   sirv_gnrl_dfflr ir_rs2idx_dfflr(ir_rs2idx_ena, ir_rs2idx_nxt, ir_rs2idx_r, clk, rst_n);
 
-  wire pc_r[E203_PC_SIZE - 1];
-  wire ifu_pc_nxt[E203_PC_SIZE - 1] = pc_r;
-  wire ifu_pc_r[E203_PC_SIZE - 1];
+  wire pc_r[E203_PC_SIZE-1:0];
+  wire ifu_pc_nxt[E203_PC_SIZE-1:0] = pc_r;
+  wire ifu_pc_r[E203_PC_SIZE-1:0];
   sirv_gnrl_dfflr ifu_pc_dfflr(ir_pc_vld_set, ifu_pc_nxt,  ifu_pc_r, clk, rst_n);
 
   __assign(ifu_o_ir  = ifu_ir_r);
@@ -328,8 +329,8 @@ public:
   wire ir_empty = ~ir_valid_r;
   wire ir_rs1en = dec2ifu_rs1en;
   wire ir_rden = dec2ifu_rden;
-  wire ir_rdidx[E203_RFIDX_WIDTH - 1] = dec2ifu_rdidx;
-  wire minidec_jalr_rs1idx[E203_RFIDX_WIDTH - 1];
+  wire ir_rdidx[E203_RFIDX_WIDTH-1:0] = dec2ifu_rdidx;
+  wire minidec_jalr_rs1idx[E203_RFIDX_WIDTH-1:0];
   wire jalr_rs1idx_cam_irrdidx = ir_rden & (minidec_jalr_rs1idx == ir_rdidx) & ir_valid_r;
 
   //////////////////////////////////////////////////////////////
@@ -373,7 +374,7 @@ public:
   wire minidec_jal;
   wire minidec_jalr;
   wire minidec_bxx;
-  wire minidec_bjp_imm[E203_XLEN - 1];
+  wire minidec_bjp_imm[E203_XLEN-1:0];
 
   // The mini-decoder to check instruciton length and branch type 
   e203_ifu_minidec u_e203_ifu_minidec (
@@ -405,8 +406,8 @@ public:
   );
 
   wire bpu_wait;
-  wire prdt_pc_add_op1[E203_PC_SIZE - 1];
-  wire prdt_pc_add_op2[E203_PC_SIZE - 1];
+  wire prdt_pc_add_op1[E203_PC_SIZE-1:0];
+  wire prdt_pc_add_op2[E203_PC_SIZE-1:0];
 
   e203_ifu_litebpu u_e203_ifu_litebpu(
 
@@ -440,16 +441,16 @@ public:
     .rst_n                    (rst_n )                 
   );
   // If the instruciton is 32bits length, increament 4, otherwise 2
-  wire pc_incr_ofst[2] = minidec_rv32 ? 4 : 2;
+  wire pc_incr_ofst[2:0] = minidec_rv32 ? 4 : 2;
 
-  wire pc_nxt_pre[E203_PC_SIZE - 1];
-  wire pc_nxt[E203_PC_SIZE - 1];
+  wire pc_nxt_pre[E203_PC_SIZE-1:0];
+  wire pc_nxt[E203_PC_SIZE-1:0];
 
   wire bjp_req = minidec_bjp & prdt_taken;
 
   wire ifetch_replay_req;
 
-  wire pc_add_op1[E203_PC_SIZE - 1] = 
+  wire pc_add_op1[E203_PC_SIZE-1:0] = 
                             #ifndef E203_TIMING_BOOST//}
                                pipe_flush_req  ? pipe_flush_add_op1 :
                                dly_pipe_flush_req  ? pc_r :
@@ -459,7 +460,7 @@ public:
                                ifu_reset_req   ? pc_rtvec :
                                                  pc_r;
 
-  wire pc_add_op2[E203_PC_SIZE - 1] =  
+  wire pc_add_op2[E203_PC_SIZE-1:0] =  
                             #ifndef E203_TIMING_BOOST//}
                                pipe_flush_req  ? pipe_flush_add_op2 :
                                dly_pipe_flush_req  ? 0 :
