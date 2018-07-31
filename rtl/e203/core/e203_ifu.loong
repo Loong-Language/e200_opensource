@@ -39,17 +39,17 @@
 hmodule e203_ifu {
 public:
   e203_ifu(
-  output inspect_pc[E203_PC_SIZE - 1],
+  output inspect_pc[E203_PC_SIZE-1:0],
   output ifu_active,
   input  itcm_nohold,
 
-  input  pc_rtvec[E203_PC_SIZE - 1],
+  input  pc_rtvec[E203_PC_SIZE-1:0],
   #ifdef E203_HAS_ITCM //{
   input  ifu2itcm_holdup,
   //input  ifu2itcm_replay,
 
   // The ITCM address region indication signal
-  input itcm_region_indic[E203_ADDR_SIZE - 1],
+  input itcm_region_indic[E203_ADDR_SIZE-1:0],
 
   //////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////
@@ -59,14 +59,14 @@ public:
   input  ifu2itcm_icb_cmd_ready, // Handshake ready
             // Note: The data on rdata or wdata channel must be naturally
             //       aligned, this is in line with the AXI definition
-  output ifu2itcm_icb_cmd_addr[E203_ITCM_ADDR_WIDTH - 1], // Bus transaction start addr 
+  output ifu2itcm_icb_cmd_addr[E203_ITCM_ADDR_WIDTH-1:0], // Bus transaction start addr
 
   //    * Bus RSP channel
   input  ifu2itcm_icb_rsp_valid, // Response valid 
   output ifu2itcm_icb_rsp_ready, // Response ready
   input  ifu2itcm_icb_rsp_err,   // Response error
             // Note: the RSP rdata is inline with AXI definition
-  input  ifu2itcm_icb_rsp_rdata[E203_ITCM_DATA_WIDTH - 1], 
+  input  ifu2itcm_icb_rsp_rdata[E203_ITCM_DATA_WIDTH-1:0],
   #endif//}
 
   #ifdef E203_HAS_MEM_ITF //{
@@ -78,14 +78,14 @@ public:
   input  ifu2biu_icb_cmd_ready, // Handshake ready
             // Note: The data on rdata or wdata channel must be naturally
             //       aligned, this is in line with the AXI definition
-  output ifu2biu_icb_cmd_addr[E203_ADDR_SIZE - 1], // Bus transaction start addr 
+  output ifu2biu_icb_cmd_addr[E203_ADDR_SIZE-1:0], // Bus transaction start addr
 
   //    * Bus RSP channel
   input  ifu2biu_icb_rsp_valid, // Response valid 
   output ifu2biu_icb_rsp_ready, // Response ready
   input  ifu2biu_icb_rsp_err,   // Response error
             // Note: the RSP rdata is inline with AXI definition
-  input  ifu2biu_icb_rsp_rdata[E203_SYSMEM_DATA_WIDTH - 1], 
+  input  ifu2biu_icb_rsp_rdata[E203_SYSMEM_DATA_WIDTH-1:0],
 
   //input  ifu2biu_replay,
   #endif//}
@@ -93,13 +93,13 @@ public:
   //////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////
   // The IR stage to EXU interface
-  output ifu_o_ir[E203_INSTR_SIZE - 1],// The instruction register
-  output ifu_o_pc[E203_PC_SIZE - 1],   // The PC register along with
+  output ifu_o_ir[E203_INSTR_SIZE-1:0],// The instruction register
+  output ifu_o_pc[E203_PC_SIZE-1:0],   // The PC register along with
   output ifu_o_pc_vld,
   output ifu_o_misalgn,                  // The fetch misalign 
   output ifu_o_buserr,                   // The fetch bus error
-  output ifu_o_rs1idx[E203_RFIDX_WIDTH - 1],
-  output ifu_o_rs2idx[E203_RFIDX_WIDTH - 1],
+  output ifu_o_rs1idx[E203_RFIDX_WIDTH-1:0],
+  output ifu_o_rs2idx[E203_RFIDX_WIDTH-1:0],
   output ifu_o_prdt_taken,               // The Bxx is predicted as taken
   output ifu_o_muldiv_b2b,               
   output ifu_o_valid, // Handshake signals with EXU stage
@@ -107,10 +107,10 @@ public:
 
   output  pipe_flush_ack,
   input   pipe_flush_req,
-  input   pipe_flush_add_op1[E203_PC_SIZE - 1],
-  input   pipe_flush_add_op2[E203_PC_SIZE - 1],
+  input   pipe_flush_add_op1[E203_PC_SIZE-1:0],
+  input   pipe_flush_add_op2[E203_PC_SIZE-1:0],
   #ifdef E203_TIMING_BOOST//}
-  input   pipe_flush_pc[E203_PC_SIZE - 1],
+  input   pipe_flush_pc[E203_PC_SIZE-1:0],
   #endif//}
 
       
@@ -123,11 +123,11 @@ public:
   output ifu_halt_ack,
 
   input  oitf_empty,
-  input  rf2ifu_x1[E203_XLEN - 1],
-  input  rf2ifu_rs1[E203_XLEN - 1],
+  input  rf2ifu_x1[E203_XLEN-1:0],
+  input  rf2ifu_rs1[E203_XLEN-1:0],
   input  dec2ifu_rden,
   input  dec2ifu_rs1en,
-  input  dec2ifu_rdidx[E203_RFIDX_WIDTH - 1],
+  input  dec2ifu_rdidx[E203_RFIDX_WIDTH-1:0],
   input  dec2ifu_mulhsu,
   input  dec2ifu_div   ,
   input  dec2ifu_rem   ,
@@ -141,15 +141,15 @@ public:
   
   wire ifu_req_valid; 
   wire ifu_req_ready; 
-  wire ifu_req_pc[E203_PC_SIZE - 1]; 
+  wire ifu_req_pc[E203_PC_SIZE-1:0];
   wire ifu_req_seq;
   wire ifu_req_seq_rv32;
-  wire ifu_req_last_pc[E203_PC_SIZE - 1];
+  wire ifu_req_last_pc[E203_PC_SIZE-1:0];
   wire ifu_rsp_valid; 
   wire ifu_rsp_ready; 
   wire ifu_rsp_err;   
   //wire ifu_rsp_replay;   
-  wire ifu_rsp_instr[E203_INSTR_SIZE - 1]; 
+  wire ifu_rsp_instr[E203_INSTR_SIZE-1:0];
 
   e203_ifu_ifetch u_e203_ifu_ifetch(
     .inspect_pc   (inspect_pc),
@@ -250,5 +250,5 @@ public:
     .rst_n         (rst_n        ) 
   );
 
-  assign ifu_active = 1'b1;// Seems the IFU never rest at block level
+  __assign(ifu_active = 1'b1);// Seems the IFU never rest at block level
 };
